@@ -16,8 +16,8 @@
     <language></language>
     <tags></tags>
     <dependencies>
-      <dependency id="UmbracoCms" version="7.3.0" />
-      <dependency id="Microsoft.AspNet.SignalR" version="2.2.0" />
+      <dependency id="UmbracoCms.Core" version="7.0.0" />
+      <dependency id="Microsoft.Web.Xdt" version="2.1.1" />
     </dependencies>
   </metadata>
 </package>

@@ -25,7 +25,7 @@
 
 	<!-- NUGET ONLY PROPERTIES -->
 	<PropertyGroup>
-		<NugetPackageName>Look Who's Editing Too</NugetPackageName>
+		<NugetPackageName>Umbraco Package Actions</NugetPackageName>
 		<PackageId>Nibble.Umbraco.PackageActions</PackageId>
 		<Copyright>Tim Geyssens</Copyright>
 		<Owners>Tim Geyssens</Owners>
@@ -39,7 +39,7 @@
 
 	<PropertyGroup>
 		<VersionMajor>1</VersionMajor>
-		<VersionMinor>0</VersionMinor>
+		<VersionMinor>1</VersionMinor>
 		<VersionPatch>0</VersionPatch>
 		<VersionSuffix></VersionSuffix>
 		<UmbracoVersion>7.0.0</UmbracoVersion>
