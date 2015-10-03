@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Package">
+
+	<!-- IMPORTS -->
+	<PropertyGroup>
+		<MSBuildCommunityTasksPath>$(MSBuildProjectDirectory)\Tools\MSBuildCommunityTasks</MSBuildCommunityTasksPath>
+		<MSBuildNugetTasksPath>$(MSBuildProjectDirectory)\Tools\MSBuildNugetTasks</MSBuildNugetTasksPath>
+	</PropertyGroup>
+
+	<Import Project="$(MSBuildCommunityTasksPath)\MSBuild.Community.Tasks.Targets" />
+	<Import Project="$(MSBuildNugetTasksPath)\MSBuild.NuGet.Tasks.Targets" />
+	
+	<!-- PROPERTIES -->
+	<!-- SHARED PROPERTIES -->
+	<PropertyGroup>
+		<PackageName>Umbraco Package Actions</PackageName>
+		<MinUmbracoVersion>7.0.0</MinUmbracoVersion>
+		<Readme>Useful package actions for package devs</Readme>
+		<AuthorName>Tim Geyssens</AuthorName>
+		<AuthorUrl>http://nibble.be</AuthorUrl>
+		<PackageLicenseName>MIT license</PackageLicenseName>
+		<PackageLicenseUrl>http://www.opensource.org/licenses/mit-license.php</PackageLicenseUrl>
+		<ProjectUrl>http://nibble.be</ProjectUrl>
+	</PropertyGroup>
+
+	<!-- NUGET ONLY PROPERTIES -->
+	<PropertyGroup>
+		<NugetPackageName>Look Who's Editing Too</NugetPackageName>
+		<PackageId>Nibble.Umbraco.PackageActions</PackageId>
+		<Copyright>Tim Geyssens</Copyright>
+		<Owners>Tim Geyssens</Owners>
+		<Summary>Useful package actions for package devs</Summary>
+		<IconUrl>https://raw.githubusercontent.com/TimGeyssens/UmbracoPackageActions/master/logo.png</IconUrl>
+		<Tags>umbraco</Tags>
+		<Language>en-GB</Language>
+		<RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+	</PropertyGroup>
+  
+
+	<PropertyGroup>
+		<VersionMajor>1</VersionMajor>
+		<VersionMinor>0</VersionMinor>
+		<VersionPatch>0</VersionPatch>
+		<VersionSuffix></VersionSuffix>
+		<UmbracoVersion>7.0.0</UmbracoVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<RootDir>$(MSBuildProjectDirectory)</RootDir>
+		<PackageDir>$(RootDir)\..\Releases</PackageDir>
+		<BuildNuGetDir>$(MSBuildProjectDirectory)\_nuget</BuildNuGetDir>
+		<CoreProjectDir>$(RootDir)\..\src\UmbracoPackageActions\</CoreProjectDir>
+	</PropertyGroup>
+
+	<!-- TARGETS -->
+
+  
+	<!-- CLEAN -->
+	<Target Name="Clean">
+		<RemoveDir Directories="$(BuildNuGetDir)" Condition="Exists('$(BuildNuGetDir)')" />   
+		<MakeDir Directories="$(BuildNuGetDir)" />  
+		<MakeDir Directories="$(PackageDir)" />
+    <MakeDir Directories="$(AppPluginUmbDir>)" />
+	</Target>
+
+	<!-- UPDATE ASSEMBLEY VERSION -->
+	<Target Name="UpdateAssemblyInfo" DependsOnTargets="Clean">
+		<Version Major="$(VersionMajor)" Minor="$(VersionMinor)" BuildType="Automatic" RevisionType="Automatic" StartDate="08/03/2013">
+			<Output TaskParameter="Build" PropertyName="Build" />
+			<Output TaskParameter="Revision" PropertyName="Revision" />
+		</Version>
+		<AssemblyInfo CodeLanguage="CS"
+			OutputFile="$(CoreProjectDir)\Properties\VersionInfo.cs"
+			AssemblyVersion="$(VersionMajor).$(VersionMinor).$(VersionPatch)"
+			AssemblyFileVersion="$(VersionMajor).$(VersionMinor).$(Build).$(Revision)"
+			AssemblyInformationalVersion="$(VersionMajor).$(VersionMinor).$(VersionPatch)$(VersionSuffix)"/>
+	</Target>
+
+	<!-- COMPILE -->
+	<Target Name="Compile" DependsOnTargets="UpdateAssemblyInfo">
+		<MSBuild Projects="$(CoreProjectDir)\UmbracoPackageActions.csproj" />
+	</Target>
+
+  <!-- PREPARE FILES -->
+	<Target Name="PrepareFiles" DependsOnTargets="Compile">
+    
+    <ItemGroup>
+     
+      <BinFiles Include="$(CoreProjectDir)\bin\**\UmbracoPackageActions.dll" />
+	  <XDTBinFiles Include="$(CoreProjectDir)\bin\**\Microsoft.Web.XmlTransform.dll" />
+	  <NuSpecFile Include="$(MSBuildProjectDirectory)\package.nuspec" />
+	  <NugetReadmeFile Include="$(MSBuildProjectDirectory)\readme.txt" />
+    </ItemGroup>
+    
+	<Copy SourceFiles="@(NuSpecFile)" DestinationFolder="$(BuildNuGetDir)" />
+    	 
+	
+
+	<Copy SourceFiles="@(NugetReadmeFile)" DestinationFolder="$(BuildNuGetDir)\" />
+	
+	
+    <Copy SourceFiles="@(BinFiles)"
+    DestinationFiles="@(BinFiles->'$(BuildNuGetDir)\lib\%(RecursiveDir)%(Filename)%(Extension)')" />
+	
+	
+	 <Copy SourceFiles="@(XDTBinFiles)"
+    DestinationFiles="@(XDTBinFiles->'$(BuildNuGetDir)\lib\%(RecursiveDir)%(Filename)%(Extension)')" />
+	
+  </Target>
+
+    
+	
+  <!-- MANIFEST FOR NUGET PACKAGE -->
+	<Target Name="ManifestNuGet" DependsOnTargets="PrepareFiles">
+	<ItemGroup>
+	  <ManifestFiles Include="$(BuildNuGetDir)\**\*" Exclude="$(BuildNuGetDir)\package.nuspec" />
+	</ItemGroup>
+	<MSBuild.NuGet.Tasks.ManifestUpdate
+			ManifestFile="$(BuildNuGetDir)\package.nuspec"
+			WorkingDirectory="$(BuildNuGetDir)"
+			Title="$(NugetPackageName)"
+			Description="$(Readme)"
+			Summary="$(Summary)"
+			Version="$(VersionMajor).$(VersionMinor).$(VersionPatch)$(VersionSuffix)"
+			MinimumRequiredUmbracoVersion ="$(MinUmbracoVersion)"
+			Authors="$(AuthorName)"
+			Owners="$(Owners)"
+			Copyright="$(Copyright)"
+			LicenseUrl="$(PackageLicenseUrl)"
+			ProjectUrl="$(ProjectUrl)"
+			Id="$(PackageId)"
+			IconUrl="$(IconUrl)"
+			Language="$(Language)"
+			RequireLicenseAcceptance="$(RequireLicenseAcceptance)"
+			Tags="$(Tags)"
+			Files="@(ManifestFiles)" />
+	</Target>
+	<!-- PACKAGE -->
+	<Target Name="Package" DependsOnTargets="ManifestNuGet">
+		
+			
+		<MSBuild.NuGet.Tasks.Pack NuGetExePath="$(RootDir)\Tools\NuGet.exe"
+          ManifestFile="$(BuildNuGetDir)\package.nuspec"
+          BasePath="$(BuildNuGetDir)"
+          Version="$(ProductVersion)"
+          OutputDirectory="$(PackageDir)"
+          Symbols="true" />
+		  
+       
+		<RemoveDir Directories="$(BuildNuGetDir)" Condition="Exists('$(BuildNuGetDir)')" />
+	</Target>
+
+</Project>
